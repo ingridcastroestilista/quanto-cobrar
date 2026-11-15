@@ -1,6 +1,6 @@
 // Guarda o app no celular para abrir sem internet.
 // Ao publicar uma versão nova, mude VERSAO para o celular baixar os arquivos novos.
-const VERSAO = 'qc-v3';
+const VERSAO = 'qc-v4';
 const ARQUIVOS = [
   './', 'index.html', 'css/app.css', 'js/app.js', 'js/calc.js', 'js/store.js', 'js/ui.js', 'js/proposta.js',
   'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
@@ -10,9 +10,10 @@ self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSAO).then((c) => c.addAll(ARQUIVOS)).then(() => self.skipWaiting()));
 });
 
+// Só apaga caches deste app: no GitHub Pages os dois apps dividem o mesmo endereço base.
 self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== VERSAO).map((k) => caches.delete(k))))
+    caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith('qc-') && k !== VERSAO).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });

@@ -1,4 +1,5 @@
 import * as store from './store.js';
+import { protegerApp } from './acesso.js';
 import { GRUPOS, SUGESTOES_MATERIAL, SUGESTOES_EXTRA, uid, novoRascunho } from './store.js';
 import {
   custoDaHora, calcPeca, composicao, taxaVenda, alocarPagamentos, ordenarParcelas, planoMaterial,
@@ -1067,6 +1068,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) store
 store.carregar();
 store.pedirArmazenamentoPersistente();
 render();
+protegerApp({ nome: 'Quanto Cobrar', icone: 'icons/icon-192.png', cor: '#A8452F' });
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});

@@ -33,6 +33,13 @@ export function codigoDoMes(ym) {
 }
 
 const limpar = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+// Enquanto ela digita: maiúsculas e o traço aparece sozinho entre a palavra e os números ("bainha5" → "BAINHA-5").
+export function formatarCodigo(txt) {
+  const t = limpar(txt);
+  const letras = t.match(/^[A-Z]*/)[0];
+  const resto = t.slice(letras.length);
+  return resto ? `${letras}-${resto}`.slice(0, letras.length + 5) : letras;
+}
 const mesDe = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 const mesAnterior = (ym) => { const [a, m] = ym.split('-').map(Number); return m === 1 ? `${a - 1}-12` : `${a}-${String(m - 1).padStart(2, '0')}`; };
 const NOMES_MES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -92,7 +99,7 @@ function telaCodigo({ nome, icone }, podeFechar, aoLiberar) {
       ${icone ? `<img src="${icone}" alt="">` : ''}
       <h1>Código de ${mes}</h1>
       <p>Para usar o ${nome}, digite o código do mês. Ele está na descrição da aula do curso.</p>
-      <input name="codigo" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Ex.: LINHA-1234" aria-label="Código do mês">
+      <input name="codigo" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Ex.: LINHA1234" aria-label="Código do mês">
       <p class="acesso-erro" aria-live="polite"></p>
       <button type="submit">Entrar</button>
       ${podeFechar ? '<button type="button" class="acesso-sec" data-fechar>Depois</button>' : ''}
@@ -100,6 +107,12 @@ function telaCodigo({ nome, icone }, podeFechar, aoLiberar) {
     </form>`;
   const form = el.querySelector('form');
   const campo = el.querySelector('input');
+  campo.addEventListener('input', () => {
+    if (campo.selectionStart !== campo.value.length) return; // editando no meio: não mexe no cursor
+    const f = formatarCodigo(campo.value);
+    if (f !== campo.value) campo.value = f;
+    el.querySelector('.acesso-erro').textContent = '';
+  });
   form.addEventListener('submit', (ev) => {
     ev.preventDefault();
     const liberado = conferir(campo.value);

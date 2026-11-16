@@ -290,3 +290,7 @@ body[data-tela="peca"] .barra-preco {
 .logo-vazia { width: 72px; height: 72px; display: grid; place-items: center; border: 1.5px dashed var(--line); border-radius: 12px; font-size: 12px; color: var(--ink-3); text-align: center; flex: none; }
 .logo-linha .acoes { margin: 0; align-items: center; }
 .previa-orc img { display: block; width: 100%; min-height: 240px; border-radius: 12px; background: #fff; box-shadow: 0 4px 18px rgba(42,35,32,.12); }
+
+/* Selo de quem desenvolveu */
+.selo { margin: 36px 0 8px; text-align: center; font: 400 12px 'Inter', system-ui, sans-serif; letter-spacing: .02em; color: var(--ink-3); }
+.selo b { font-weight: 600; color: var(--accent); }

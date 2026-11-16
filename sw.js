@@ -1,6 +1,6 @@
 // Guarda o app no celular para abrir sem internet.
 // Ao publicar uma versão nova, mude VERSAO para o celular baixar os arquivos novos.
-const VERSAO = 'qc-v4';
+const VERSAO = 'qc-v5';
 const ARQUIVOS = [
   './', 'index.html', 'css/app.css', 'js/app.js', 'js/calc.js', 'js/store.js', 'js/ui.js', 'js/proposta.js',
   'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',

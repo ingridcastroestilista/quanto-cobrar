@@ -64,10 +64,13 @@ function rota() {
   return { nome: telas[nome] ? nome : 'inicio', id };
 }
 
+// Selo discreto no fim de todas as telas.
+const SELO = '<p class="selo">Desenvolvido por <b>Ingrid Castro Academy</b></p>';
+
 function render() {
   const { nome, id } = rota();
   telaAtual = telas[nome];
-  $main.innerHTML = telaAtual.render(id);
+  $main.innerHTML = telaAtual.render(id) + SELO;
   atualizar();
   telaAtual.depois?.(id);
   document.querySelectorAll('.nav a').forEach((a) => a.classList.toggle('ativo', a.dataset.tela === (telaAtual.aba || nome)));

@@ -3,12 +3,13 @@ import { protegerApp } from './acesso.js';
 import { GRUPOS, SUGESTOES_MATERIAL, SUGESTOES_EXTRA, uid, novoRascunho } from './store.js';
 import {
   custoDaHora, calcPeca, composicao, taxaVenda, alocarPagamentos, ordenarParcelas, planoMaterial,
-  entradaMinima, gerarParcelas, resumoMes, dadosVenda, hojeISO, somaMeses, mesDe,
+  entradaMinima, gerarParcelas, resumoMes, dadosVenda, hojeISO, somaMeses, mesDe, metaLucro,
 } from './calc.js';
 import {
   esc, brl, pct, num, horasTxt, dataBR, mesNome, mesCurto, maiuscula, campo, campoUn, linha, segmentado, barra, frase,
   lerCampo, valorCampo, toast,
 } from './ui.js';
+import { usarMoeda, simbolo, opcoesMoeda } from './moeda.js';
 import { novaProposta, formasDePagamento, textoProposta, canvasProposta, pngDe, pdfDe, prepararLogo, validoAte } from './proposta.js';
 
 const S = () => store.get();
@@ -69,6 +70,7 @@ function rota() {
 const SELO = '<p class="selo">Desenvolvido por <b>Ingrid Castro Academy</b></p>';
 
 function render() {
+  usarMoeda(S().moeda); // moeda escolhida em Ajustes (real, se nunca escolheu)
   const { nome, id } = rota();
   telaAtual = telas[nome];
   $main.innerHTML = telaAtual.render(id) + SELO;
@@ -178,7 +180,7 @@ telas.custo = {
       const itens = c.despesas.filter((d) => d.grupo === g.k);
       return `<details class="grupo" ${itens.some((d) => d.valor) ? 'open' : ''}>
         <summary><span>${g.nome}</span><b data-out="g-${g.k}"></b></summary>
-        ${itens.map((d) => `<div class="item">${campo(`custo.despesas#${d.id}.nome`, d.nome, 'text', 'aria-label="Nome da despesa" class="nome"')}${campoUn(`custo.despesas#${d.id}.valor`, d.valor, 'money', 'R$', `aria-label="${esc(d.nome)}"`)}<button class="x" data-acao="removerDespesa" data-id="${d.id}" aria-label="Remover ${esc(d.nome)}">×</button></div>`).join('')}
+        ${itens.map((d) => `<div class="item">${campo(`custo.despesas#${d.id}.nome`, d.nome, 'text', 'aria-label="Nome da despesa" class="nome"')}${campoUn(`custo.despesas#${d.id}.valor`, d.valor, 'money', simbolo(), `aria-label="${esc(d.nome)}"`)}<button class="x" data-acao="removerDespesa" data-id="${d.id}" aria-label="Remover ${esc(d.nome)}">×</button></div>`).join('')}
         <button class="link" data-acao="addDespesa" data-grupo="${g.k}">+ Adicionar em ${g.nome.toLowerCase()}</button>
       </details>`;
     }).join('');
@@ -186,7 +188,7 @@ telas.custo = {
       ${cab('Custo da sua hora', 'Faça uma vez. Refaça a cada três meses ou quando algo mudar.')}
       ${cartao(`
         <span class="passo">1</span><h2>O seu salário</h2>
-        ${linha('Quanto você quer receber por mês', campoUn('custo.proLabore', c.proLabore, 'money', 'R$'))}
+        ${linha('Quanto você quer receber por mês', campoUn('custo.proLabore', c.proLabore, 'money', simbolo()))}
         <p class="ajuda">Isso é o pró-labore. É custo da empresa, igual ao aluguel. Não é o seu lucro.</p>
         <label class="check"><input type="checkbox" data-bind="custo.provisoes" ${c.provisoes ? 'checked' : ''}> Guardar todo mês para o 13º e as férias <b data-out="provisoes"></b></label>
       `)}
@@ -262,7 +264,7 @@ telas.peca = {
         </div>`).join('')}</div>
         <div class="chips">${SUGESTOES_MATERIAL.map((s) => `<button class="chip" data-acao="addMat" data-nome="${esc(s)}">+ ${esc(s)}</button>`).join('')}</div>
         <div class="soma"><span>Subtotal</span><b data-out="matSub"></b></div>`
-      : linha('Total gasto em materiais', campoUn('rascunho.matTotal', r.matTotal, 'money', 'R$'), 'Tecido, forro, aviamentos, bojo, renda…');
+      : linha('Total gasto em materiais', campoUn('rascunho.matTotal', r.matTotal, 'money', simbolo()), 'Tecido, forro, aviamentos, bojo, renda…');
 
     return `
       ${cab(editando ? 'Editar orçamento' : 'Preço da peça', 'Uma peça por vez.', editando ? `#/orcamento/${r.id}` : '')}
@@ -289,7 +291,7 @@ telas.peca = {
       ${cartao(`
         <span class="passo">3</span><h2>Custos extras</h2>
         <p class="ajuda">Serviços e itens que só existem por causa desta peça. Se a cliente paga o frete à parte, deixe de fora.</p>
-        ${r.extras.map((e) => `<div class="item">${campo(`rascunho.extras#${e.id}.nome`, e.nome, 'text', 'aria-label="Item" class="nome"')}${campoUn(`rascunho.extras#${e.id}.valor`, e.valor, 'money', 'R$')}<button class="x" data-acao="removerExtra" data-id="${e.id}" aria-label="Remover">×</button></div>`).join('')}
+        ${r.extras.map((e) => `<div class="item">${campo(`rascunho.extras#${e.id}.nome`, e.nome, 'text', 'aria-label="Item" class="nome"')}${campoUn(`rascunho.extras#${e.id}.valor`, e.valor, 'money', simbolo())}<button class="x" data-acao="removerExtra" data-id="${e.id}" aria-label="Remover">×</button></div>`).join('')}
         <div class="chips">${SUGESTOES_EXTRA.map((s) => `<button class="chip" data-acao="addExtra" data-nome="${esc(s)}">+ ${esc(s)}</button>`).join('')}<button class="chip" data-acao="addExtra" data-nome="">+ Outro</button></div>
         <div class="soma forte"><span>Total de extras</span><b data-out="extras"></b></div>
       `)}
@@ -534,7 +536,7 @@ telas.fechar = {
       ${cab('Fechar venda', `${esc(o.cliente || 'Sem nome')} · ${esc(o.peca || 'Peça')}`, `#/orcamento/${o.id}`)}
       ${cartao(`
         ${linha('Data do fechamento', campo('ui.fechar.data', f.data, 'date'))}
-        ${linha('Valor fechado', campoUn('ui.fechar.valor', f.valor, 'money', 'R$'), `Preço sugerido: ${brl(calcOrc(o).preco)}`)}
+        ${linha('Valor fechado', campoUn('ui.fechar.valor', f.valor, 'money', simbolo()), `Preço sugerido: ${brl(calcOrc(o).preco)}`)}
         <div data-html="desconto"></div>
         ${linha('Taxa do cartão nesta venda', campoUn('ui.fechar.cartaoPct', f.cartaoPct, 'pct', '%'), 'Parcelado no cartão costuma ter taxa maior. Use 0 se for Pix ou dinheiro.')}
       `)}
@@ -542,7 +544,7 @@ telas.fechar = {
         <h2>Como a cliente vai pagar</h2>
         ${segmentado('ui.fechar.forma', f.forma, [['avista', 'À vista'], ['entrada', 'Entrada + restante'], ['parcelado', 'Parcelado']])}
         ${f.forma === 'entrada' ? `
-          ${linha('Valor da entrada', campoUn('ui.fechar.entrada', f.entrada, 'money', 'R$'))}
+          ${linha('Valor da entrada', campoUn('ui.fechar.entrada', f.entrada, 'money', simbolo()))}
           <div data-html="entradaMin"></div>
           ${linha('Data do restante', campo('ui.fechar.dataRestante', f.dataRestante, 'date'), 'Por exemplo, na entrega')}` : ''}
         ${f.forma === 'parcelado' ? `
@@ -623,14 +625,14 @@ telas.cliente = {
       <p class="ajuda">A cliente vê só o valor, as formas de pagamento, o que está incluso e o prazo. Custos e lucro ficam só com você.</p>
       ${a.nome ? '' : cartaoAtelie(a)}
       ${cartao(`
-        ${linha('Valor', campoUn(b('valor'), pr.valor, 'money', 'R$'), `Preço sugerido: ${brl(calcOrc(o).preco)}`)}
+        ${linha('Valor', campoUn(b('valor'), pr.valor, 'money', simbolo()), `Preço sugerido: ${brl(calcOrc(o).preco)}`)}
         <div data-html="desconto"></div>
       `)}
       ${cartao(`
         <h2>Formas de pagamento</h2>
         ${marca('avista', 'À vista (Pix ou dinheiro)')}
         ${marca('entrada', 'Entrada + restante na entrega')}
-        ${pr.formas.entrada ? `${linha('Valor da entrada', campoUn(b('entrada'), pr.entrada, 'money', 'R$'))}<div data-html="entradaMin"></div>` : ''}
+        ${pr.formas.entrada ? `${linha('Valor da entrada', campoUn(b('entrada'), pr.entrada, 'money', simbolo()))}<div data-html="entradaMin"></div>` : ''}
         ${marca('cartao', 'Parcelado no cartão')}
         ${pr.formas.cartao ? `
           ${linha('Em até quantas vezes', campo(b('parcelas'), pr.parcelas, 'int'))}
@@ -776,8 +778,8 @@ telas.mes = {
         <h2>Vendas do mês</h2>
         ${m.vendido > 0 ? `<p>${frase(m.compVendido, m.vendido, 'vendidos')}</p>${barra(m.compVendido)}` : '<p class="vazio-mini">Nenhuma venda fechada neste mês.</p>'}
         ${metas.faturamento ? `<h3>Meta de faturamento</h3>${prog(m.vendido, metas.faturamento)}` : ''}
-        ${metas.lucro ? `<h3>Meta de lucro</h3>${prog(Math.max(0, m.lucroVendido), metas.lucro)}` : ''}
-        ${!metas.faturamento && !metas.lucro ? '<p class="ajuda"><a href="#/ajustes">Defina metas de faturamento e de lucro</a> para acompanhar aqui.</p>' : ''}
+        ${metaLucro(s) ? `<h3>Meta de lucro <small>(${pct(s.padroes.margem)} do faturamento)</small></h3>${prog(Math.max(0, m.lucroVendido), metaLucro(s))}` : ''}
+        ${!metas.faturamento ? '<p class="ajuda"><a href="#/ajustes">Defina a meta de faturamento</a> para acompanhar aqui. A meta de lucro se baseia na margem de lucro que você escolheu.</p>' : ''}
       `)}
       ${m.descontos > 0.5 ? cartao(`
         <h2>Descontos do mês</h2>
@@ -810,16 +812,26 @@ telas.mes = {
 
 // ---------- Tela: Ajustes ----------
 
+// Meta de lucro: calculada, não se digita. Atualiza enquanto ela muda o faturamento ou a margem.
+const linhaMetaLucro = (s) => `<div class="linha-rot"><span>Meta de lucro</span><small>Baseada na margem de lucro que você escolheu (${pct(s.padroes.margem)}).</small></div>
+  <div class="linha-ctl"><b class="valor-auto">${brl(metaLucro(s))}</b></div>`;
+
 telas.ajustes = {
+  saidas() { return { metaLucro: linhaMetaLucro(S()) }; },
   render() {
     const s = S();
     return `
       ${cab('Ajustes', '', '#/inicio')}
       ${cartaoAtelie(s.atelie)}
       ${cartao(`
+        <h2>Moeda</h2>
+        <p class="ajuda">Para quem trabalha fora do Brasil. Muda o símbolo em todo o app e no orçamento da cliente. Os valores já digitados não são convertidos.</p>
+        <select class="seletor-moeda" data-acao="moeda" aria-label="Moeda">${opcoesMoeda(s.moeda || 'BRL')}</select>
+      `)}
+      ${cartao(`
         <h2>Metas do mês</h2>
-        ${linha('Meta de faturamento', campoUn('metas.faturamento', s.metas.faturamento, 'money', 'R$'))}
-        ${linha('Meta de lucro', campoUn('metas.lucro', s.metas.lucro, 'money', 'R$'))}
+        ${linha('Meta de faturamento', campoUn('metas.faturamento', s.metas.faturamento, 'money', simbolo()))}
+        <div class="linha meta-auto" data-html="metaLucro">${linhaMetaLucro(s)}</div>
       `)}
       ${cartao(`
         <h2>Valores que vêm preenchidos em cada peça nova</h2>
@@ -1031,6 +1043,7 @@ $main.addEventListener('change', (ev) => {
       .catch((e) => toast(e.message));
     return;
   }
+  if (el.dataset.acao === 'moeda') { S().moeda = el.value; store.salvar(); render(); toast('Moeda trocada'); return; }
   if (el.dataset.acao === 'importar' && el.files[0]) {
     if (!confirm('Restaurar este backup? Os dados atuais deste aparelho serão substituídos.')) { el.value = ''; return; }
     store.importar(el.files[0]).then(() => { toast('Backup restaurado'); ir('#/inicio'); }).catch((e) => toast(e.message || 'Não foi possível ler o arquivo.'));

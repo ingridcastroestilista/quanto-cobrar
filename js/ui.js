@@ -1,18 +1,19 @@
 // Formatação, leitura de números em português e pequenos componentes de tela.
 import { PARTES } from './calc.js';
+import { dinheiro } from './moeda.js';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtNum = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
 
-export const brl = (v) => fmtBRL.format(Number.isFinite(v) ? v : 0);
+// Valor em dinheiro, na moeda escolhida em Ajustes (o nome brl ficou do tempo em que era só real).
+export const brl = (v) => dinheiro(Number.isFinite(v) ? v : 0);
 export const num = (v) => fmtNum.format(Number.isFinite(v) ? v : 0);
 export const pct = (v) => `${fmtNum.format((Number(v) || 0) * 100)}%`;
 
 // "1.234,56" → 1234.56 ; "1500" → 1500 ; "1,5" → 1.5
 export function parseNum(s) {
-  s = String(s ?? '').trim().replace(/[R$\s%]/g, '');
+  s = String(s ?? '').trim().replace(/[^\d,.-]/g, ''); // tira símbolo da moeda, %, espaços
   if (!s) return 0;
   if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
   else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');

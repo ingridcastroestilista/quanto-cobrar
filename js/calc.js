@@ -56,6 +56,10 @@ export function calcPeca(p, ch) {
   };
 }
 
+// Meta de lucro do mês: sai sozinha da meta de faturamento e da margem de lucro que ela usa
+// (o preço é calculado para a margem ser essa parte do valor de venda).
+export const metaLucro = (s) => n(s.metas?.faturamento) * n(s.padroes?.margem);
+
 // Taxas (imposto + cartão + comissão) de uma venda; o cartão pode ser outro no fechamento.
 export function taxaVenda(p, cartaoPct) {
   const cartao = cartaoPct == null ? n(p.cartao) : n(cartaoPct);

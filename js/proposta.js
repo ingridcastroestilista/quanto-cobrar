@@ -1,10 +1,10 @@
 // O orçamento que vai para a cliente: só o que ela precisa saber.
 // Nunca mostra custo da hora, despesas, margem, reserva nem a divisão do dinheiro.
 import { entradaMinima, taxaVenda, hojeISO } from './calc.js';
+import { dinheiro } from './moeda.js';
 
 const n = (v) => Number(v) || 0;
-const fmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-const brl = (v) => fmt.format(n(v));
+const brl = (v) => dinheiro(n(v));
 const dataBR = (iso) => (iso ? iso.split('-').reverse().join('/') : '');
 const uid = () => Math.random().toString(36).slice(2, 10);
 

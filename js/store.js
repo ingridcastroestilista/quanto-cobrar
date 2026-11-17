@@ -45,6 +45,7 @@ function estadoInicial() {
     padroes: { ...PADROES },
     metas: { faturamento: 0, lucro: 0 },
     atelie: { nome: '', whatsapp: '', instagram: '', logo: null }, // aparece no orçamento da cliente
+    moeda: 'BRL', // moeda dos valores (Ajustes > Moeda)
     rascunho: null,
     orcamentos: [],
     ultimoBackup: null,

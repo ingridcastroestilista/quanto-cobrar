@@ -266,13 +266,13 @@ telas.peca = {
 
     const materiais = r.modoMat === 'lista'
       ? `<div class="mats">${r.materiais.map((m) => `<div class="mat">
-          ${campo(`rascunho.materiais#${m.id}.nome`, m.nome, 'text', 'aria-label="Material" class="nome"')}
+          ${campo(`rascunho.materiais#${m.id}.nome`, m.nome, 'text', 'aria-label="Material" class="nome" placeholder="Nome do material"')}
           <label class="mini">Qtd ${campo(`rascunho.materiais#${m.id}.qtd`, m.qtd, 'num')}</label>
           <label class="mini">Unidade ${campo(`rascunho.materiais#${m.id}.unidade`, m.unidade, 'text')}</label>
           <label class="mini">Preço ${campo(`rascunho.materiais#${m.id}.preco`, m.preco, 'money')}</label>
           <button class="x" data-acao="removerMat" data-id="${m.id}" aria-label="Remover">×</button>
         </div>`).join('')}</div>
-        <div class="chips">${SUGESTOES_MATERIAL.map((s) => `<button class="chip" data-acao="addMat" data-nome="${esc(s)}">+ ${esc(s)}</button>`).join('')}</div>
+        <div class="chips">${SUGESTOES_MATERIAL.map((s) => `<button class="chip" data-acao="addMat" data-nome="${esc(s)}">+ ${esc(s)}</button>`).join('')}<button class="chip" data-acao="addMat" data-nome="">+ Outro</button></div>
         <div class="soma"><span>Subtotal</span><b data-out="matSub"></b></div>`
       : linha('Total gasto em materiais', campoUn('rascunho.matTotal', r.matTotal, 'money', simbolo()), 'Tecido, forro, aviamentos, bojo, renda…');
 
@@ -935,7 +935,14 @@ const acoes = {
     el.closest('.etapa').classList.toggle('usada', e.qtd > 0);
     atualizar();
   },
-  addMat(el) { rascunho().materiais.push({ id: uid(), nome: el.dataset.nome, unidade: el.dataset.nome.match(/zíper|bojo|colchete|etiqueta|linha/i) ? 'unidade' : 'metro', qtd: 0, preco: 0 }); store.salvar(); render(); },
+  addMat(el) {
+    const id = uid();
+    const nome = el.dataset.nome;
+    rascunho().materiais.push({ id, nome, unidade: !nome || /zíper|bojo|colchete|etiqueta|linha/i.test(nome) ? 'unidade' : 'metro', qtd: 0, preco: 0 });
+    store.salvar(); render();
+    // "Outro": já põe o cursor no nome para ela escrever.
+    if (!nome) document.querySelector(`[data-bind="rascunho.materiais#${id}.nome"]`)?.focus();
+  },
   removerMat(el) { const r = rascunho(); r.materiais = r.materiais.filter((m) => m.id !== el.dataset.id); store.salvar(); render(); },
   addExtra(el) { rascunho().extras.push({ id: uid(), nome: el.dataset.nome, valor: 0 }); store.salvar(); render(); },
   removerExtra(el) { const r = rascunho(); r.extras = r.extras.filter((m) => m.id !== el.dataset.id); store.salvar(); render(); },

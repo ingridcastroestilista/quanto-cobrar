@@ -17,7 +17,7 @@ const $main = document.getElementById('main');
 const MARGEM_MIN = 0.2;
 
 // Estado só da tela (não é guardado).
-const ui = { busca: '', filtro: 'todos', mes: mesDe(hojeISO()), fechar: null, editParcelas: false, novoItem: '' };
+const ui = { busca: '', filtro: 'todos', mes: mesDe(hojeISO()), fechar: null, editParcelas: false, novoItem: '', editarEtapas: false };
 
 // ---------- Caminhos de dados (data-bind) ----------
 // 'custo.despesas#ID.valor' → state.custo.despesas.find(id).valor ; 'ui.x' → estado da tela
@@ -39,11 +39,11 @@ function setPath(caminho, valor) {
   const r = resolver(caminho);
   if (!r) return;
   r.alvo[r.chave] = valor;
-  // Tempo de uma etapa vira o "meu tempo" padrão para as próximas peças.
-  const m = caminho.match(/^rascunho\.etapas#([^.]+)\.min$/);
+  // Tempo e nome de uma etapa viram o padrão para as próximas peças.
+  const m = caminho.match(/^rascunho\.etapas#([^.]+)\.(min|nome)$/);
   if (m) {
     const e = S().etapas.find((x) => x.id === m[1]);
-    if (e) e.min = valor;
+    if (e) e[m[2]] = valor;
   }
   if (caminho.startsWith('custo.')) S().custo.atualizadoEm = new Date().toISOString();
   if (!r.doUi) store.salvar();
@@ -241,8 +241,18 @@ telas.peca = {
     const r = rascunho();
     const atual = custoAtual();
     const editando = r.id && S().orcamentos.some((o) => o.id === r.id);
-    const tempo = r.modoHoras === 'etapas'
+    const tempo = r.modoHoras === 'etapas' && ui.editarEtapas
+      ? `<p class="ajuda">Mude o nome, acrescente ou tire etapas. A lista fica assim para as próximas peças. Orçamentos já salvos não mudam.</p>
+         <div class="etapas">${r.etapas.map((e) => `<div class="etapa editando">
+           ${campo(`rascunho.etapas#${e.id}.nome`, e.nome, 'text', `aria-label="Nome da etapa" class="nome-etapa" placeholder="Nome da etapa"`)}
+           ${campo(`rascunho.etapas#${e.id}.min`, e.min, 'tempo', `aria-label="Tempo de ${esc(e.nome)}" class="tempo"`)}
+           <button class="x" data-acao="tirarEtapa" data-id="${e.id}" aria-label="Tirar ${esc(e.nome)}">×</button>
+         </div>`).join('')}</div>
+         <button class="link" data-acao="novaEtapa">+ Acrescentar etapa</button>
+         <button class="btn" data-acao="editarEtapas">Pronto</button>`
+      : r.modoHoras === 'etapas'
       ? `<p class="ajuda">Preencha o <b>seu</b> tempo em cada etapa (ex.: 1:30) e marque quantas vezes ela acontece nesta peça. O seu tempo fica guardado para as próximas.</p>
+         <button class="link editar-etapas" data-acao="editarEtapas">Editar a lista de etapas</button>
          <div class="etapas">${r.etapas.map((e) => `<div class="etapa ${e.qtd ? 'usada' : ''}">
            <span class="etapa-nome">${esc(e.nome)}</span>
            ${campo(`rascunho.etapas#${e.id}.min`, e.min, 'tempo', `aria-label="Tempo de ${esc(e.nome)}" class="tempo"`)}
@@ -954,6 +964,29 @@ const acoes = {
     if (!confirm('Desfazer o fechamento? Os pagamentos registrados desta venda serão apagados.')) return;
     o.status = 'enviado'; o.fechamento = null; store.salvar(); render();
   },
+  editarEtapas() {
+    // Ao sair da edição, some com etapas que ficaram sem nome.
+    if (ui.editarEtapas) {
+      const vazias = new Set(rascunho().etapas.filter((e) => !String(e.nome).trim()).map((e) => e.id));
+      if (vazias.size) { const s = S(); s.etapas = s.etapas.filter((e) => !vazias.has(e.id)); rascunho().etapas = rascunho().etapas.filter((e) => !vazias.has(e.id)); store.salvar(); }
+    }
+    ui.editarEtapas = !ui.editarEtapas; render();
+  },
+  novaEtapa() {
+    const e = { id: uid(), nome: '', min: 60 };
+    S().etapas.push({ ...e });
+    rascunho().etapas.push({ ...e, qtd: 0 });
+    store.salvar(); render();
+    document.querySelector(`[data-bind="rascunho.etapas#${e.id}.nome"]`)?.focus();
+  },
+  tirarEtapa(el) {
+    const id = el.dataset.id;
+    const s = S();
+    const nome = rascunho().etapas.find((e) => e.id === id)?.nome || 'Etapa';
+    s.etapas = s.etapas.filter((e) => e.id !== id);
+    rascunho().etapas = rascunho().etapas.filter((e) => e.id !== id);
+    store.salvar(); render(); toast(`${nome} saiu da lista`);
+  },
   editParcelas() { ui.editParcelas = !ui.editParcelas; render(); },
   receber(el) {
     const o = acharOrc(el.dataset.orc || rota().id);
@@ -1072,7 +1105,7 @@ document.addEventListener('click', (ev) => {
   f(el);
 });
 
-window.addEventListener('hashchange', () => { ui.editParcelas = false; render(); window.scrollTo(0, 0); });
+window.addEventListener('hashchange', () => { ui.editParcelas = false; ui.editarEtapas = false; render(); window.scrollTo(0, 0); });
 window.addEventListener('pagehide', store.gravar);
 document.addEventListener('visibilitychange', () => { if (document.hidden) store.gravar(); });
 

@@ -52,7 +52,9 @@ p { margin: 8px 0; }
 /* Cabeçalhos */
 .marca { display: flex; align-items: center; gap: 12px; margin: 4px 0 16px; }
 .marca p { margin: 0; color: var(--ink-2); font-size: 14px; }
-.marca .engrenagem { margin-left: auto; font-size: 22px; text-decoration: none; color: var(--ink-2); padding: 8px; }
+.marca .engrenagem { margin-left: auto; flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: var(--field); text-decoration: none; color: var(--ink-2); }
+.engrenagem svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.engrenagem:active { background: var(--accent-soft); color: var(--accent); }
 .topo { display: flex; align-items: flex-start; gap: 8px; margin: 4px 0 16px; }
 .topo p { margin: 4px 0 0; color: var(--ink-2); font-size: 14px; }
 .voltar { font-size: 32px; line-height: 1; text-decoration: none; color: var(--ink); padding: 0 8px 0 0; margin-top: -4px; }
